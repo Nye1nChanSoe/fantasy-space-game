@@ -7,7 +7,7 @@ SELECT 'Motyka', 'motyka', 'heslo'
     WHERE NOT EXISTS (SELECT 1 FROM account WHERE username = 'motyka');
 
 INSERT INTO character (account_id, name, health, attack, mana, healing, experience, level, class)
-SELECT id, 'Moni The Teacher', 100, 40, 30, 30, 6000, 10, 'SORCERER'
+SELECT id, 'Moni The Teacher', 100, 40, 30, 30, 6000, 1, 'SORCERER'
 FROM account WHERE username = 'motyka'
                AND NOT EXISTS (SELECT 1 FROM character WHERE name = 'Moni The Teacher');
 

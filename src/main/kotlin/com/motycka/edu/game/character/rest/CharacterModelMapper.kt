@@ -41,4 +41,13 @@ fun Character.toCharacterResponse(currentAccountId: Long) = CharacterResponse(
     isOwner = accountId == currentAccountId
 )
 
+fun Character.toCharacterSummary(expGained: Int) = CharacterSummary(
+    id = requireNotNull(id) { "Character ID must not be null" },
+    name = name,
+    characterClass = characterClass,
+    level = level.toString(),
+    experienceTotal = experience - expGained,
+    experienceGained = expGained
+)
+
 

@@ -22,8 +22,3 @@ data class CharacterResponse (
     val shouldLevelUp: Boolean,
     val isOwner: Boolean,
 )
-
-// TODO: remove
-fun calculateLevel(experience: Int): Int {
-    return (experience / 1000) + 1
-}

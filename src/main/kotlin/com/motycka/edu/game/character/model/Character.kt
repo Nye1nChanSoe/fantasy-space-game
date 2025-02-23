@@ -2,9 +2,11 @@ package com.motycka.edu.game.character.model
 
 import com.motycka.edu.game.account.model.AccountId
 import jakarta.persistence.*
+import kotlin.math.max
+import kotlin.math.min
 
 @Entity
-@Table(name = "character") // Matches DB table name
+@Table(name = "character")
 data class Character(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,13 +32,13 @@ data class Character(
     var experience: Int = 0,
 
     @Column(name = "defense")
-    var defensePower: Int? = null,
+    open var defensePower: Int? = null,
 
     @Column(name = "level", nullable = false)
     var level: Int = 1,
 
     @Column(name = "stamina")
-    var stamina: Int? = null,
+    open var stamina: Int? = null,
 
     @Column(name = "healing")
     var healingPower: Int? = null,
@@ -68,4 +70,59 @@ data class Character(
 
     fun isWarrior() = characterClass == CharacterClass.WARRIOR
     fun isSorcerer() = characterClass == CharacterClass.SORCERER
+
+    fun attack(opponent: Character): Int {
+        return if (isWarrior()) warriorAttack(opponent) else sorcererAttack(opponent)
+    }
+
+    private fun warriorAttack(opponent: Character): Int {
+        if (stamina == null || stamina!! <= 0) return 0
+
+        stamina = max(stamina!! - 5, 0)
+        val damage = max(attackPower - (opponent.defensePower ?: 0), 1)
+        opponent.takeDamage(damage)
+
+        return damage
+    }
+
+    private fun sorcererAttack(opponent: Character): Int {
+        if (mana == null || mana!! <= 0) return 0
+
+        mana = max(mana!! - 5, 0)
+        opponent.takeDamage(attackPower)
+
+        return attackPower
+    }
+
+    fun takeDamage(damage: Int) {
+        val reducedDamage = if (isWarrior()) {
+            max(damage - (defensePower ?: 0), 1)
+        } else {
+            damage
+        }
+        health = max(health - reducedDamage, 0)
+    }
+
+    fun heal(): Int {
+        if (!isSorcerer() || mana == null || mana!! < 5) return 0
+
+        mana = max(mana!! - 5, 0)
+        val healAmount = min(healingPower ?: 0, 100 - health)
+        health += healAmount
+
+        return healAmount
+    }
+
+    fun beforeRound() {
+        if (isWarrior()) {
+            stamina = min((stamina ?: 0) + 3, 25)
+        } else if (isSorcerer()) {
+            mana = min((mana ?: 0) + 3, 20)
+            if (mana!! >= 5) {
+                heal()
+            }
+        }
+    }
+
+    fun isDefeated(): Boolean = health <= 0
 }
