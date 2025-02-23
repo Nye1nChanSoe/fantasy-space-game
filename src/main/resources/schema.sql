@@ -15,6 +15,7 @@ create table if not exists character
     health int not null,
     attack int not null,
     experience int not null,
+    level int default 1,
     defense int,
     stamina int,
     healing int,

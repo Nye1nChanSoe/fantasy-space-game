@@ -329,11 +329,24 @@ class CharactersTab {
                     method: 'PUT',
                     body: JSON.stringify(updateData)
                 });
-                
-                if (response.ok) {
-                    this.levelUpModal.hide();
+
+                if (!response.error) {
                     showToast('Character leveled up successfully!');
+
+                    // Ensure Bootstrap modal instance is found and hide it
+                    const modal = document.getElementById('levelUpModal');
+                    const bsModal = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
+
+                    // Delay to ensure UI updates first
+                    setTimeout(() => {
+                        bsModal.hide();
+                        console.log("Modal hidden successfully");
+                    }, 100);
+
                     await this.loadCharacters();
+                } else {
+                    showToast("Level up failed!", true);
+                    console.error("Error from server:", response.error);
                 }
             } catch (error) {
                 showToast(error.message, true);
