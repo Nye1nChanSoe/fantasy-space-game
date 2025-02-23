@@ -7,12 +7,11 @@ import com.motycka.edu.game.account.rest.toAccountResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import jakarta.validation.Valid
 
 /**
  * This is example of a controller class that handles HTTP requests for the account resource with service dependency injection.
@@ -29,13 +28,13 @@ class AccountController(
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
     fun postAccount(
-        @RequestBody account: AccountRegistrationRequest
-    ): AccountResponse {
-        return accountService.createAccount(
+        @RequestBody @Valid account: AccountRegistrationRequest
+    ): ResponseEntity<AccountResponse?> {
+        val response = accountService.createAccount(
             account = account.toAccount()
         ).toAccountResponse()
+        return ResponseEntity.status(HttpStatus.CREATED).body(response)
     }
 
 }
