@@ -46,6 +46,8 @@ data class Character(
     @Column(name = "mana")
     var mana: Int? = null,
 ) {
+
+    // Convenience secondary constructor
     constructor() : this(
         id = null,
         accountId = 0,
@@ -71,54 +73,91 @@ data class Character(
     fun isWarrior() = characterClass == CharacterClass.WARRIOR
     fun isSorcerer() = characterClass == CharacterClass.SORCERER
 
+    /**
+     * High-level attack entry point. Redirects to the warrior or sorcerer logic.
+     */
     fun attack(opponent: Character): Int {
         return if (isWarrior()) warriorAttack(opponent) else sorcererAttack(opponent)
     }
 
+    /**
+     * Warrior attack logic. Uses stamina, reduces stamina by 2 if available.
+     */
     private fun warriorAttack(opponent: Character): Int {
-        if (stamina == null || stamina!! <= 0) return 0
+        val currentStamina = stamina ?: 0
+        if (currentStamina < 2) {
+            return 0
+        }
 
-        stamina = max(stamina!! - 5, 0)
-        val damage = max(attackPower - (opponent.defensePower ?: 0), 1)
+        stamina = (currentStamina - 2).coerceAtLeast(0)
+        val damage = (attackPower - (opponent.defensePower ?: 0)).coerceAtLeast(1)
+
         opponent.takeDamage(damage)
-
         return damage
     }
 
+    /**
+     * Sorcerer attack logic. Uses mana, reduces mana by 2 if available.
+     */
     private fun sorcererAttack(opponent: Character): Int {
-        if (mana == null || mana!! <= 0) return 0
+        val currentMana = mana ?: 0
+        if (currentMana < 2) {
+            return 0
+        }
 
-        mana = max(mana!! - 5, 0)
+        mana = (currentMana - 2).coerceAtLeast(0)
+
         opponent.takeDamage(attackPower)
-
         return attackPower
     }
 
+    /**
+     * Called when this character takes damage. Warriors benefit from defensePower.
+     */
     fun takeDamage(damage: Int) {
-        val reducedDamage = if (isWarrior()) {
-            max(damage - (defensePower ?: 0), 1)
+        val finalDamage = if (isWarrior()) {
+            (damage - (defensePower ?: 0)).coerceAtLeast(1)
         } else {
             damage
         }
-        health = max(health - reducedDamage, 0)
+        health = (health - finalDamage).coerceAtLeast(0)
     }
 
+    /**
+     * Sorcerer heal. Costs 5 mana and can’t exceed total health of 100.
+     */
     fun heal(): Int {
-        if (!isSorcerer() || mana == null || mana!! < 5) return 0
+        if (!isSorcerer()) return 0
 
-        mana = max(mana!! - 5, 0)
-        val healAmount = min(healingPower ?: 0, 100 - health)
+        val currentMana = mana ?: 0
+        if (currentMana < 5) {
+            return 0
+        }
+        mana = (currentMana - 5).coerceAtLeast(0)
+
+        val healAmount = (healingPower ?: 0)
+            .coerceAtMost(100 - health)
+            .coerceAtLeast(0) // ensure no negative
+
         health += healAmount
-
         return healAmount
     }
 
+    /**
+     * Regenerates resource before each round.
+     * Warriors: stamina between 2..5, max 30
+     * Sorcerers: mana between 2..4, max 20, optionally auto-heal if health < 80
+     */
     fun beforeRound() {
         if (isWarrior()) {
-            stamina = min((stamina ?: 0) + 3, 25)
+            val regen = (2..5).random()
+            stamina = ((stamina ?: 0) + regen).coerceAtMost(30)
         } else if (isSorcerer()) {
-            mana = min((mana ?: 0) + 3, 20)
-            if (mana!! >= 5) {
+            val regen = (2..4).random()
+            mana = ((mana ?: 0) + regen).coerceAtMost(20)
+
+            val hpThreshold = (100 * 0.8).toInt()
+            if (health < hpThreshold && (mana ?: 0) >= 5) {
                 heal()
             }
         }
