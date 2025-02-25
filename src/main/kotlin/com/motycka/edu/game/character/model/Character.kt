@@ -64,7 +64,7 @@ data class Character(
     )
 
     companion object {
-        private const val LEVEL_UP_XP = 1000
+        private const val LEVEL_UP_XP = 500
     }
 
     val shouldLevelUp: Boolean
